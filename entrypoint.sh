@@ -23,7 +23,11 @@ git config user.name "ekee"
 git config user.password ${GITHUB_TOKEN}
 
 # Delete the tag on any remote before pushing
-git push origin ":refs/tags/${TAG}"
+git push origin ":refs/tags/${TAG}" || true
+git tag -d ${TAG} || true
+
+# Make sure we are on the latest commit
+git checkout origin/${BRANCH}
 
 # Replace the tag to reference the most recent commit
 git tag -a "${TAG}" -m "staging release for branch ${BRANCH}"
