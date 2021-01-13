@@ -2,6 +2,10 @@
 
 set -e
 
+DELETE=${DELETE:-"false"}
+BRANCH=${BRANCH:-"master"}
+echo "DELETE: ${DELETE}"
+
 # input validation
 if [[ -z "${TAG}" ]]; then
    echo "No tag name supplied"
@@ -25,6 +29,12 @@ git config user.password ${GITHUB_TOKEN}
 # Delete the tag on any remote before pushing
 git push origin ":refs/tags/${TAG}" || true
 git tag -d ${TAG} || true
+
+if [ "$DELETE" == "true" ]; then
+    # Stopping here
+    echo DELETE "ON": not pushing a new tag
+    exit 0
+fi
 
 # Make sure we are on the latest commit
 git checkout origin/${BRANCH}
