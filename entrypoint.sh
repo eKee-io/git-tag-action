@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # input validation
 if [[ -z "${TAG}" ]]; then
    echo "No tag name supplied"
@@ -16,11 +18,15 @@ if [[ -z "${GITHUB_TOKEN}" ]]; then
    exit 1
 fi
 
+git config user.email "contact@ekee.io"
+git config user.name "ekee"
+git config user.password ${GITHUB_TOKEN}
+
 # Delete the tag on any remote before pushing
 git push origin ":refs/tags/${TAG}"
 
 # Replace the tag to reference the most recent commit
-git tag -fa "${TAG}"
+git tag -a "${TAG}" -m "staging release for branch ${BRANCH}"
 
 # Push the tag to the remote origin
-git push -f origin "${BRANCH}" --tags
+git push --tags
