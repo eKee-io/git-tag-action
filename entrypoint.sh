@@ -1,8 +1,19 @@
 #!/bin/bash
 
+set -e
+
+DELETE=${DELETE:-"false"}
+BRANCH=${BRANCH:-"master"}
+echo "DELETE: ${DELETE}"
+
 # input validation
 if [[ -z "${TAG}" ]]; then
    echo "No tag name supplied"
+   exit 1
+fi
+
+if [[ -z "${BRANCH}" ]]; then
+   echo "No branch supplied"
    exit 1
 fi
 
@@ -11,38 +22,25 @@ if [[ -z "${GITHUB_TOKEN}" ]]; then
    exit 1
 fi
 
-# check if tag already exists
-tag_exists="false"
-if [ $(git tag -l "$TAG") ]; then
-    tag_exists="true"
+git config user.email "contact@ekee.io"
+git config user.name "ekee"
+git config user.password ${GITHUB_TOKEN}
+
+# Delete the tag on any remote before pushing
+git push origin ":refs/tags/${TAG}" || true
+git tag -d ${TAG} || true
+
+if [ "$DELETE" == "true" ]; then
+    # Stopping here
+    echo DELETE "ON": not pushing a new tag
+    exit 0
 fi
 
-# push the tag to github
-git_refs_url=$(jq .repository.git_refs_url $GITHUB_EVENT_PATH | tr -d '"' | sed 's/{\/sha}//g')
+# Make sure we are on the latest commit
+git checkout origin/${BRANCH}
 
-echo "**pushing tag $tag to repo $GITHUB_REPOSITORY"
+# Replace the tag to reference the most recent commit
+git tag -a "${TAG}" -m "staging release for branch ${BRANCH}"
 
-if $tag_exists
-then
-  # update tag
-  curl -s -X PATCH "$git_refs_url/tags/$TAG" \
-  -H "Authorization: token $GITHUB_TOKEN" \
-  -d @- << EOF
-
-  {
-    "sha": "$GITHUB_SHA",
-    "force": true
-  }
-EOF
-else
-  # create new tag
-  curl -s -X POST $git_refs_url \
-  -H "Authorization: token $GITHUB_TOKEN" \
-  -d @- << EOF
-
-  {
-    "ref": "refs/tags/$TAG",
-    "sha": "$GITHUB_SHA"
-  }
-EOF
-fi
+# Push the tag to the remote origin
+git push --tags
