@@ -22,6 +22,8 @@ if [[ -z "${GITHUB_TOKEN}" ]]; then
    exit 1
 fi
 
+git config --global --add safe.directory $(realpath .)
+
 git config user.email "contact@ekee.io"
 git config user.name "ekee"
 git config user.password ${GITHUB_TOKEN}
