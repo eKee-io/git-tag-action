@@ -39,6 +39,7 @@ if [ "$DELETE" == "true" ]; then
 fi
 
 # Make sure we are on the latest commit
+git fetch origin ${BRANCH}
 git checkout origin/${BRANCH}
 
 # Replace the tag to reference the most recent commit
